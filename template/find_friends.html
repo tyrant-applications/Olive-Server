@@ -1,0 +1,24 @@
+<form method="post" action="/friends/find">
+{% csrf_token %}
+<table>
+<tr>
+    <td>Username</td>
+    <td><input type="text" name="username" value="" /></td>
+</tr>
+<tr>
+    <td>Type</td>
+    <td><input type="text" name="type" value="" /></td>
+</tr>
+
+<tr>
+    <td>emails</td>
+    <td><input type="text" name="emails" value="" /></td>
+</tr>
+
+<tr>
+    <td>contacts</td>
+    <td><input type="text" name="contacts" value="" /></td>
+</tr>
+</table>
+<input type="submit" value="Find friends" />
+</form>

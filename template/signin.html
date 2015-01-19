@@ -1,0 +1,22 @@
+<form method="post" action="/accounts/login">
+{% csrf_token %}
+<table>
+<tr>
+    <td>Username</td>
+    <td><input type="text" name="username" value="" /></td>
+</tr>
+<tr>
+    <td>Password</td>
+    <td><input type="password" name="password" value="" /></td>
+</tr>
+</table>
+
+<!--client_id= 2472266904a9452d7e30&client_secret= 26e82a650178634867d59a54404913bcbc175265&grant_type=password&username=ujlikes&password=123123” http://localhost:8080/oauth2/access_token/-->
+
+<input type="hidden" name="client_id" value="2472266904a9452d7e30" />
+<input type="hidden" name="client_secret" value="26e82a650178634867d59a54404913bcbc175265" />
+<input type="hidden" name="grant_type" value="password" />
+
+<input type="submit" value="login" />
+<input type="hidden" name="next" value="{{ next }}" />
+</form>

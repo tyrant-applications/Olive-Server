@@ -1,0 +1,153 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from django.contrib.auth.models import User
+
+from django.http import HttpResponse
+from django.contrib.auth import authenticate, login, logout
+
+from django.forms.models import model_to_dict
+
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template import RequestContext, loader
+from django.core.mail import send_mail
+
+from controller.models import *
+from controller.utils import *
+from controller.forms import *
+
+import datetime,json
+
+from django.utils.encoding import smart_unicode
+
+from django.conf import settings
+
+from emailusernames.utils import *
+
+import os,json
+from django.conf import settings
+from io import BufferedWriter,FileIO
+from django import forms
+
+
+import re
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def add_friends(request):
+    if not request.POST:
+        return print_json_error(None,"Please Use POST Method",'#1')
+    
+    username = request.POST['username']
+    friends_id = request.POST['friends_id']
+    
+    friends = friends_id.split(",")
+    if len(friends) <= 0:
+        return print_json_error(None,"No Friends",'#2')
+    
+    results = list()
+    try:
+        user = get_user(username)
+        for friend_id in friends:
+            f_id = friend_id.strip()
+            try:
+                f_user = get_user(f_id)
+                if not f_user.is_active:
+                    continue
+                if user.username.lower() == f_user.username.lower():
+                    return print_json_error(None, "You cannot add yourself",'#6')
+                friendship, created = Friendship.objects.get_or_create(user=user, friend=f_user)
+                friend_info = process_user_profile(f_user)
+                if friend_info is not None:
+                    results.append(friend_info)
+            except Exception as e:
+                print str(e)
+                return print_json_error(None,"No such User "+f_id,'#4')
+    except:
+        return print_json_error(None,"Invalid user",'#5')
+    
+    return print_json(results)
+
+
+@csrf_exempt
+def delete_friends(request):
+    if not request.POST:
+        return print_json_error(None,"Please Use POST Method",'#1')
+    
+    username = request.POST['username']
+    friends_id = request.POST['friends_id']
+    
+    friends = friends_id.split(",")
+    if len(friends) <= 0:
+        return print_json_error(None,"No Friends",'#2')
+    
+    results = list()
+    try:
+        user = get_user(username)
+        for friend_id in friends:
+            f_id = friend_id.strip()
+            try:
+                f_user = get_user(f_id)
+                if user.username.lower() == f_user.username.lower():
+                    return print_json_error(None, "You cannot delete yourself",'#6')
+                
+                friendship = Friendship.objects.get(user=user, friend=f_user)
+                friendship.delete()
+                friend_info = process_user_profile(f_user)
+                if friend_info is not None:
+                    results.append(friend_info)
+            except Exception as e:
+                return print_json_error(None,"No such Friendship "+f_id,'#4')
+        
+            return print_json(results)
+    except:
+        return print_json_error(None,"Invalid user",'#5')
+    
+
+@csrf_exempt
+def find_friends(request):
+    if not request.POST:
+        return print_json_error(None,"Please Use POST Method",'#1')
+    
+    find_type = request.POST['type']
+    print find_type
+    if find_type == '0':
+        emails_info = request.POST['emails']
+        emails = emails_info.split(",")
+        if len(emails) <= 0:
+            return print_json_error(None,"No Emails",'#2')
+        
+        results = list()
+        for email in emails:
+            try:
+                f_user = get_user(email)
+                if not f_user.is_active:
+                    continue
+                friend_info = process_user_profile(f_user)
+                if friend_info is not None:
+                    results.append(friend_info)
+            except:
+                continue
+        return print_json(results)
+    elif find_type == '1':
+        contacts_info = request.POST['contacts']
+        contacts = contacts_info.split(",")
+        if len(contacts) <= 0:
+            return print_json_error(None,"No Contacts",'#2')
+        
+        results = list()
+        for contact in contacts:
+            try:
+                f_user_profile = UserProfile.objects.get(phone=contact)
+                if not f_user_profile.user.is_active:
+                    continue
+                print f_user_profile
+                friend_info = process_user_profile(f_user_profile.user)
+                if friend_info is not None:
+                    results.append(friend_info)
+            except:
+                continue
+        return print_json(results)
+    
+    return print_json('')

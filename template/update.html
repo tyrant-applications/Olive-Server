@@ -1,0 +1,28 @@
+<form method="post" action="/user/update" enctype="multipart/form-data">
+{% csrf_token %}
+<table>
+<tr>
+    <td>Username</td>
+    <td><input type="text" name="username" value="" /></td>
+</tr>
+<tr>
+    <td>Password</td>
+    <td><input type="password" name="password" value="" /></td>
+</tr>
+<tr>
+    <td>New Password</td>
+    <td><input type="password" name="new_password" value="" /></td>
+</tr>
+<tr>
+    <td>New Phone</td>
+    <td><input type="text" name="new_phone" value="" /></td>
+</tr>
+<tr>
+        <td>New Picture</td>
+    <td>    <input type="file" name="new_picture"></td>
+
+</tr>
+</table>
+<input type="submit" value="update" />
+<input type="hidden" name="next" value="{{ next }}" />
+</form>

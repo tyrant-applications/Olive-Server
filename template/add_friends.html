@@ -1,0 +1,14 @@
+<form method="post" action="/friends/add">
+{% csrf_token %}
+<table>
+<tr>
+    <td>Username</td>
+    <td><input type="text" name="username" value="" /></td>
+</tr>
+<tr>
+    <td>Friends</td>
+    <td><input type="text" name="friends_id" value="" /></td>
+</tr>
+</table>
+<input type="submit" value="add friends" />
+</form>
