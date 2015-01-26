@@ -1,0 +1,8 @@
+#runserver in linux background
+
+screen -S tyrant
+runserver in the screen
+ctrl+a d -> exit
+
+#resume
+screen -r
