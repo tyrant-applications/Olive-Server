@@ -1,2 +1,4 @@
-*.pyc 
+*.pyc
+debug.log
+tyrant_server/settings.py
 
