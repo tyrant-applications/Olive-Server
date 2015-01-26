@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+
+
+
 from django.contrib.auth.models import User
 
 from django.http import HttpResponse
@@ -174,7 +177,7 @@ def update(request):
                 password = request.POST['password']
                 if not user.check_password(password):
                     return print_json_error(None, "Invalid User PW", '#2.2')
-            
+
             #set new password
             if request.POST.get("new_password"):
                 new_password = request.POST['new_password']

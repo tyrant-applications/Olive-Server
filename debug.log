@@ -990,3 +990,9 @@ Traceback (most recent call last):
   File "/Users/Uijune/Documents/tyrant_server/controller/messagecontroller.py", line 125
     notifications = RoomNotifications.objects.filter(user=user, processed=False, message__room__id=room_id, message__reg_date).order_by('message__reg_date')
 SyntaxError: non-keyword arg after keyword arg
+Not Found: /
+Not Found: /favicon.ico
+Not Found: /
+Not Found: /
+Not Found: /
+Not Found: /
