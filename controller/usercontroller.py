@@ -35,12 +35,18 @@ from django.views.decorators.csrf import csrf_exempt
 import re
 
 @csrf_exempt
+@post_required
 def leave(request):
-    if not request.POST:
-        return print_json_error(None,"Please Use POST Method",'#1')
+
+    if not request.POST.get('username'):
+        return print_json_error(None,"Please Input Username",'#1.1')
+
+    if not request.POST.get('password'):
+        return print_json_error(None,"Please Input Password",'#1.2')
 
     username = request.POST['username']
     password = request.POST['password']
+    
 
     try: 
         user = authenticate(username=username,password=password)
@@ -48,7 +54,11 @@ def leave(request):
             user.is_active = False
             user.save()
         else:
-            return print_json_error(None,"No such User",'#2')
+            try:
+                user = get_user(username)
+                return print_json_error('Invalid Password','#5')
+            except:
+                return print_json_error(None,"No such User "+username,'#2')
    
         result = list()
         #result['username'] = process_user(user) 
@@ -76,6 +86,10 @@ def signup(request):
 
         if not (username_valid and password_valid):
             return print_json_error(None,'username or password invalid','#3')
+            
+        impossible_username = ['apple','facebook','twitter']    
+        if username in impossible_username:
+            return print_json_error(username+' is already taken','#7')
         try:
             user = get_user(username)
             return print_json_error(username+' is already taken','#4')
@@ -142,38 +156,41 @@ def signout(request):
         
 
 @csrf_exempt        
-def update(request):
-    if not request.POST:
-        return print_json_error(None,"Please Use POST Method",'#1')
+@post_required
+@token_required
+def update(request):   
 
-    username = request.POST['username']
-    password = request.POST['password']
-    new_password = request.POST['new_password']
-    new_phone = request.POST['new_phone']
-    print username
-    print new_password
     try: 
-        user = get_user(username)
+        user = get_user_from_token(request)
         if user is None:
             return print_json_error(None,"No such User",'#2')
         else:
+            print user
             user_profile = UserProfile.objects.get(user=user)
-            
-            if not user.check_password(password):
-                return print_json_error(None, "Invalid User Account ID/PW", '#3')
+            if not request.POST.get("password"):
+                if not access_from_local(request):
+                    return print_json_error(None, "Please Input User PW", '#2.1')
+            else:
+                password = request.POST['password']
+                if not user.check_password(password):
+                    return print_json_error(None, "Invalid User PW", '#2.2')
             
             #set new password
-            if new_password is not None and new_password is not '' and len(new_password) > 0:
-                new_password = new_password.strip()
-                
-                if len(new_password) >=6:
-                    user.set_password(new_password)
-                else:
-                    return print_json_error(None, "Password Length should be >=6", '#4')
+            if request.POST.get("new_password"):
+                new_password = request.POST['new_password']
+                if new_password is not None and new_password is not '' and len(new_password) > 0:
+                    new_password = new_password.strip()
+                    
+                    if len(new_password) >=6:
+                        user.set_password(new_password)
+                    else:
+                        return print_json_error(None, "Password Length should be >=6", '#4')
             
-            if new_phone is not None and new_phone is not '':
-                new_phone = new_phone.strip()
-                user_profile.phone = new_phone
+            if request.POST.get("new_phone"):
+                new_phone = request.POST['new_phone']    
+                if new_phone is not None and new_phone != '':
+                    new_phone = new_phone.strip()
+                    user_profile.phone = new_phone
                         
             form = ImageUploadForm(request.POST, request.FILES)
             if form.is_valid():

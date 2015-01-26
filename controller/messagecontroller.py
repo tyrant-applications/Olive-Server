@@ -38,28 +38,36 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 @post_required
+@token_required
 def post(request):
 
-    username = request.POST['username']
+    if not request.POST.get('room_id'):
+        return print_json_error(None,"Room ID required",'#0.1')
+
+    if not request.POST.get('msg_type'):
+        return print_json_error(None,"Message Type required",'#0.2')
+
     room_id = request.POST['room_id']
     msg_type = request.POST['msg_type']
-    if request.POST['contents']:
+        
+    if request.POST.get('contents'):
         contents = smart_unicode(request.POST['contents'], encoding='utf-8', strings_only=False, errors='strict')
-
-#     username = 'ujlikes@naver.com'
-#     room_id = '9'
-#     msg_type = '0'
-#     contents = u'안녕친구야'
-#     if contents:
-#         contents = smart_unicode(contents, encoding='utf-8', strings_only=False, errors='strict')
-
+    else:
+        return print_json_error(None,"Contents required",'#0.3')
+    
     result = dict()
     try:
-        user = get_user(username)
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
         room = Rooms.objects.filter(id=room_id)
         if len(room) != 1:
             return print_json_error(None,"Invalid Room", '#2')
         room = room[0]
+        
+        if not check_user_in_room(user, room):
+            return print_json_error(None,"You are not participant of this room", '#3')
+
         try:            
             attendants = RoomAttendants.objects.filter(room=room)
             message = Messages.objects.create(room=room, author=user, msg_type=msg_type,contents=contents)
@@ -94,23 +102,34 @@ def post(request):
 
 @csrf_exempt
 @post_required
+@token_required
 def read(request):
-    username = request.POST['username']
+    
+    if not request.POST.get('room_id'):
+        return print_json_error(None,"Room ID required",'#0.1')
+
     room_id = request.POST['room_id']
-
-#     username = '3ujlikes2@naver.com'
+    
 #     room_id = '9'
-
+#     last_timestamp = "2015-01-26 14:00:00+00:00"
     result = list()
     try:
-        user = get_user(username)
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
         room = Rooms.objects.filter(id=room_id)
         if len(room) != 1:
             return print_json_error(None,"Invalid Room", '#2')
-        try:            
+            
+        query = Q()
+        if request.POST.get('last_timestamp'):
+           last_timestamp = request.POST['last_timestamp']
+           query = Q(message__reg_date__lte=get_datetime_from_str(last_timestamp))
+        
+        try:
             attendant = RoomAttendants.objects.get(user=user, room=room)
             
-            notifications = RoomNotifications.objects.filter(user=user, processed=False, message__room__id=room_id).order_by('message__reg_date')
+            notifications = RoomNotifications.objects.filter(query, user=user, processed=False, message__room__id=room_id).order_by('message__reg_date')
             
             for noti in notifications:
                 noti.processed = True
@@ -118,7 +137,8 @@ def read(request):
                 noti.save()
             
             return print_json(result)
-        except:
+        except Exception as e:
+            print str(e)
             return print_json_error(None,"You are not participant of this room", '#3')
 
     except Exception as e:
@@ -131,16 +151,14 @@ def read(request):
 @csrf_exempt
 @post_required
 def new(request):
-    username = request.POST['username']
-    room_id = request.POST['room_id']
-
-    #username = '3ujlikes2@naver.com'
     
     result = list()
     try:
-        user = get_user(username)
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
         query = Q()
-        if request.POST['room_id']:
+        if request.POST.get('room_id'):
             room_id = request.POST['room_id']
             room = Rooms.objects.filter(id=room_id)
             if len(room) != 1:
@@ -148,7 +166,7 @@ def new(request):
             query = Q(message__room__id=room_id)
 
         try:            
-            if request.POST['room_id']:
+            if request.POST.get('room_id'):
                 attendant = RoomAttendants.objects.get(user=user, room=room)
             
             notifications = RoomNotifications.objects.filter(query, user=user, processed=False,).order_by('message__reg_date')

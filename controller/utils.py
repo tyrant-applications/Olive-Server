@@ -25,6 +25,8 @@ from functools import wraps
 from django.utils.decorators import available_attrs
 from django.utils import timezone
 
+import dateutil.parser
+
 def print_json(data):
     result=dict()
     result['success']=True
@@ -59,6 +61,12 @@ def process_room_info(room):
     result['id'] = room.id
     result['create_date'] = str(room.reg_date)
     result['creator'] = process_user_profile(room.creator)
+    try:
+        last_msg = Messages.objects.filter(room=room).order_by('-reg_date')[0]
+        result['last_msg'] = last_msg
+    except:
+        result['last_msg'] = ''
+    
     return result    
 
 def process_message(message):
@@ -75,11 +83,39 @@ def process_message(message):
         return None
     
 
+def check_user_in_room(user, room):
+    attendant = RoomAttendants.objects.filter(room=room, user=user)
+    if len(attendant) <= 0:
+        return False
+    return True
 
-def token_required(function):
-    @wraps(function)
-    def decorator(*args, **kwargs):
-        request = args[0]
+def get_user_from_token(request):
+    try:
+        key = request.META.get('HTTP_AUTHORIZATION')
+        if access_from_local(request):
+            token = AccessToken.objects.get(token='development')
+        else:
+            token = AccessToken.objects.get(token=key)
+        if not token:
+            return None
+        if not token.user.is_active:
+            return None
+        return token.user
+    except:
+        return None
+
+
+def get_datetime_from_str(str):
+    return dateutil.parser.parse(str)
+
+
+
+# decorators
+def token_required(func):
+    def decorator(request, *args, **kwargs):
+        if access_from_local(request):
+            return func(request, *args, **kwargs)
+
         key = request.META.get('HTTP_AUTHORIZATION')
         #print request
         try:
@@ -96,20 +132,37 @@ def token_required(function):
                     if not token.user.is_active:
                         return print_json_error('', "inactive user", "#6")
                     #return print_json(process_user_profile(token.user))
-                    return function
+                    return func(request, *args, **kwargs)
                 except AccessToken.DoesNotExist, e:
                     return print_json_error('', "invalid token", "#4") 
         except Exception as e:
             return print_json_error('',"something wrong","#5")
-        return function
+        return func(request, *args, **kwargs)
 
     return decorator
 
 
-# decorators
 def post_required(func):
     def decorated(request, *args, **kwargs):
-        if request.method != 'POST':
+        if access_from_local(request):
+            return func(request, *args, **kwargs)
+        if request.method != 'POST':        
             return print_json_error(None,"Please Use POST Method",'#1')
         return func(request, *args, **kwargs)
     return decorated
+
+
+
+# For Development
+def access_from_local(request):
+    if get_client_ip(request) == '127.0.0.1':
+        return True
+    return False
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip

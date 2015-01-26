@@ -35,20 +35,23 @@ import re
 from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
+@post_required
+@token_required
 def add_friends(request):
-    if not request.POST:
-        return print_json_error(None,"Please Use POST Method",'#1')
+    if not request.POST.get('friends_id'):
+        return print_json_error(None, "Please input Friends IDs", '#1')    
     
-    username = request.POST['username']
     friends_id = request.POST['friends_id']
-    
     friends = friends_id.split(",")
     if len(friends) <= 0:
         return print_json_error(None,"No Friends",'#2')
     
     results = list()
     try:
-        user = get_user(username)
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
+
         for friend_id in friends:
             f_id = friend_id.strip()
             try:
@@ -71,20 +74,24 @@ def add_friends(request):
 
 
 @csrf_exempt
+@post_required
+@token_required
 def delete_friends(request):
-    if not request.POST:
-        return print_json_error(None,"Please Use POST Method",'#1')
+
+    if not request.POST.get('friends_id'):
+        return print_json_error(None, "Please input Friends IDs", '#1')    
     
-    username = request.POST['username']
     friends_id = request.POST['friends_id']
-    
     friends = friends_id.split(",")
     if len(friends) <= 0:
         return print_json_error(None,"No Friends",'#2')
     
     results = list()
     try:
-        user = get_user(username)
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
+
         for friend_id in friends:
             f_id = friend_id.strip()
             try:
@@ -106,19 +113,16 @@ def delete_friends(request):
     
 
 @csrf_exempt
+@post_required
 def find_friends(request):
-    if not request.POST:
-        return print_json_error(None,"Please Use POST Method",'#1')
-    
-    find_type = request.POST['type']
-    print find_type
-    if find_type == '0':
+    results = dict()
+
+    if request.POST.get("emails"):
         emails_info = request.POST['emails']
         emails = emails_info.split(",")
         if len(emails) <= 0:
             return print_json_error(None,"No Emails",'#2')
         
-        results = list()
         for email in emails:
             try:
                 f_user = get_user(email)
@@ -126,17 +130,16 @@ def find_friends(request):
                     continue
                 friend_info = process_user_profile(f_user)
                 if friend_info is not None:
-                    results.append(friend_info)
+                    results["emails"] = friend_info
             except:
                 continue
-        return print_json(results)
-    elif find_type == '1':
+    
+    if request.POST.get("contacts"):
         contacts_info = request.POST['contacts']
         contacts = contacts_info.split(",")
         if len(contacts) <= 0:
             return print_json_error(None,"No Contacts",'#2')
         
-        results = list()
         for contact in contacts:
             try:
                 f_user_profile = UserProfile.objects.get(phone=contact)
@@ -145,9 +148,65 @@ def find_friends(request):
                 print f_user_profile
                 friend_info = process_user_profile(f_user_profile.user)
                 if friend_info is not None:
-                    results.append(friend_info)
+                    results["contacts"] = friend_info
             except:
                 continue
         return print_json(results)
     
     return print_json('')
+    
+
+@csrf_exempt
+@post_required
+def profile_friends(request):
+    if not request.POST.get('friends_id'):
+        return print_json_error(None, "Please input Friends IDs", '#1')    
+    
+    friends_id = request.POST['friends_id']
+    friends = friends_id.split(",")
+    if len(friends) <= 0:
+        return print_json_error(None,"No Friends",'#2')
+    
+    results = list()
+    try:
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
+
+        for friend_id in friends:
+            f_id = friend_id.strip()
+            try:
+                f_user = get_user(f_id)
+                if not f_user.is_active:
+                    continue
+                friend_info = process_user_profile(f_user)
+                if friend_info is not None:
+                    results.append(friend_info)
+            except Exception as e:
+                print str(e)
+    except:
+        return print_json_error(None,"Invalid user",'#5')
+    
+    return print_json(results)
+
+
+@csrf_exempt
+@token_required
+def list_friends(request):
+    try:
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
+
+        friendships = Friendship.objects.filter(user=user)
+        results = list()
+        for friendship in friendships:
+            print friendship
+            friend_info = process_user_profile(friendship.friend)
+            if friend_info is not None:
+                results.append(friend_info)
+        
+        return print_json(results)
+    except Exception as e:
+        print str(e)
+        return print_json_error(None,"Invalid user",'#5')

@@ -27,6 +27,8 @@ urlpatterns = patterns('',
     url(r'^friends/add',  'controller.friendscontroller.add_friends'),
     url(r'^friends/find',  'controller.friendscontroller.find_friends'),
     url(r'^friends/delete',  'controller.friendscontroller.delete_friends'),
+    url(r'^friends/profile',  'controller.friendscontroller.profile_friends'),
+    url(r'^friends/list',  'controller.friendscontroller.list_friends'),
 
     url(r'^rooms/create',  'controller.roomcontroller.create_room'),
     url(r'^rooms/leave',  'controller.roomcontroller.leave_room'),

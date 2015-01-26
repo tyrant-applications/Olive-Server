@@ -36,35 +36,44 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 @post_required
+@token_required
 def create_room(request):
-        
-    username = request.POST['username']
-    friends_id = request.POST['friends_id']
-     
+             
 #     username = 'ujlikes@naver.com'
 #     friends_id = '3ujlikes2@naver.com, ujlikes2@naver.com'
-    
-    friends = friends_id.split(",")
-    if len(friends) <= 0:
-        return print_json_error(None,"No Friends",'#2')
+    if not request.POST.get('friends_id'):
+        return print_json_error(None, "Please input Friends IDs", '#1')    
     
     results = dict()
     results['room_attentdants'] = list()
     
     try:
-        user = get_user(username)
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
         new_room = Rooms.objects.create(creator=user)
         results['room'] = process_room_info(new_room)
 
-        friends.append(username)
-        for friend_id in friends:
+        friends_id = request.POST['friends_id']
+        friends_id_list = friends_id.split(",")
+        active_users = list()
+        for friend_id in friends_id_list:
             f_id = friend_id.strip()
+            f_user = get_user(f_id)
+            if not f_user.is_active:
+                continue
+            active_users.append(f_user)
+
+        active_users.remove(user) # Case: my email is in friend_id, (Chat with myself? nono)
+        
+        if len(active_users) <= 0:
+            return print_json_error(None,"No Friends",'#2')
+
+        active_users.append(user)
+        for active_user in active_users:
             try:
-                f_user = get_user(f_id)
-                if not f_user.is_active:
-                    continue
-                attendant, created = RoomAttendants.objects.get_or_create(user=f_user, room=new_room)
-                friend_info = process_user_profile(f_user)
+                attendant, created = RoomAttendants.objects.get_or_create(user=active_user, room=new_room)
+                friend_info = process_user_profile(active_user)
                 if friend_info is not None:
                     results['room_attentdants'].append(friend_info)
             except Exception as e:
@@ -78,17 +87,19 @@ def create_room(request):
 
 @csrf_exempt
 @post_required
+@token_required
 def leave_room(request):
-            
-    username = request.POST['username']
+                
+    if not request.POST.get('room_id'):
+        return print_json_error(None, "Please input Room ID", '#1')    
+
     room_id = request.POST['room_id']
-    # 
-#     username = 'ujlikes@naver.com'
-#     room_id = '7'
-#     
+    
     result = dict()
     try:
-        user = get_user(username)
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
         room = Rooms.objects.filter(id=room_id)
         if len(room) != 1:
             return print_json_error(None,"Invalid Room", '#2')
@@ -112,34 +123,27 @@ def leave_room(request):
 
 @csrf_exempt
 @post_required
+@token_required
 def info(request): 
-    username = request.POST['username']
+    if not request.POST.get('room_id'):
+        return print_json_error(None, "Please input Room ID", '#1')    
+
     room_id = request.POST['room_id']
-#     
-#     username = "ujlikes@naver.com"
-#     room_id = '10'
-    
+
     results = dict()
     results['room_attentdants'] = list()
 
     try:
-        user = get_user(username)
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
         room = Rooms.objects.filter(id=room_id)
         if len(room) != 1:
             return print_json_error(None,"Invalid Room", '#2')
         room = room[0]
-        try:
-            attendants = RoomAttendants.objects.filter(room=room)
-            
-            user_in_room = False
-            for attendant in attendants:
-                if user.username.lower() == attendant.user.username.lower():
-                    #user is attendant
-                    user_in_room = True
-                    
-            if not user_in_room:
+        try:                    
+            if not check_user_in_room(user, room):
                 return print_json_error(None,"You are not participant of this room", '#3')
-            
             
             results['room'] = process_room_info(room)
 
