@@ -116,7 +116,8 @@ def delete_friends(request):
 @post_required
 def find_friends(request):
     results = dict()
-
+    results["emails"] = list()
+    results["contacts"] = list()
     if request.POST.get("emails"):
         emails_info = request.POST['emails']
         emails = emails_info.split(",")
@@ -129,9 +130,11 @@ def find_friends(request):
                 if not f_user.is_active:
                     continue
                 friend_info = process_user_profile(f_user)
+                print friend_info
                 if friend_info is not None:
-                    results["emails"] = friend_info
-            except:
+                    results["emails"].append(friend_info)
+            except Exception as e:
+                print str(e)
                 continue
     
     if request.POST.get("contacts"):
@@ -148,12 +151,11 @@ def find_friends(request):
                 print f_user_profile
                 friend_info = process_user_profile(f_user_profile.user)
                 if friend_info is not None:
-                    results["contacts"] = friend_info
+                    results["contacts"].append(friend_info)
             except:
                 continue
-        return print_json(results)
     
-    return print_json('')
+    return print_json(results)
     
 
 @csrf_exempt
