@@ -122,9 +122,9 @@ def read(request):
             return print_json_error(None,"Invalid Room", '#2')
             
         query = Q()
-        if request.POST.get('last_timestamp'):
-           last_timestamp = request.POST['last_timestamp']
-           query = Q(message__reg_date__lte=get_datetime_from_str(last_timestamp))
+        if request.POST.get('last_msg_id'):
+           last_msg_id = request.POST['last_msg_id']
+           query = Q(message__id__lte=get_datetime_from_str(last_msg_id))
         
         try:
             attendant = RoomAttendants.objects.get(user=user, room=room)
@@ -150,6 +150,7 @@ def read(request):
 
 @csrf_exempt
 @post_required
+@token_required
 def new(request):
     
     result = list()
