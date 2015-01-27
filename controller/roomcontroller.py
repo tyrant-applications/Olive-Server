@@ -147,6 +147,7 @@ def info(request):
             
             results['room'] = process_room_info(room)
 
+            attendants = RoomAttendants.objects.filter(room=room)
             for attendant in attendants:
                 friend_info = process_user_profile(attendant.user)
                 if friend_info is not None:

@@ -63,7 +63,7 @@ def process_room_info(room):
     result['creator'] = process_user_profile(room.creator)
     try:
         last_msg = Messages.objects.filter(room=room).order_by('-reg_date')[0]
-        result['last_msg'] = last_msg
+        result['last_msg'] = process_message(last_msg)
     except:
         result['last_msg'] = ''
     
@@ -155,8 +155,8 @@ def post_required(func):
 
 # For Development
 def access_from_local(request):
-    if get_client_ip(request) == '127.0.0.1':
-        return True
+    #if get_client_ip(request) == '127.0.0.1':
+    #    return True
     return False
 
 def get_client_ip(request):
