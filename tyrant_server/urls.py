@@ -33,6 +33,7 @@ urlpatterns = patterns('',
     url(r'^rooms/create',  'controller.roomcontroller.create_room'),
     url(r'^rooms/leave',  'controller.roomcontroller.leave_room'),
     url(r'^rooms/info',  'controller.roomcontroller.info'),
+    url(r'^rooms/list',  'controller.roomcontroller.room_list'),
 
     url(r'^message/post',  'controller.messagecontroller.post'),
     url(r'^message/read',  'controller.messagecontroller.read'),

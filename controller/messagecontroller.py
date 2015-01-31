@@ -124,7 +124,7 @@ def read(request):
         query = Q()
         if request.POST.get('last_msg_id'):
            last_msg_id = request.POST['last_msg_id']
-           query = Q(message__id__lte=get_datetime_from_str(last_msg_id))
+           query = Q(message__id__lte=last_msg_id)
         
         try:
             attendant = RoomAttendants.objects.get(user=user, room=room)

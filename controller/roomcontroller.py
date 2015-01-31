@@ -176,3 +176,33 @@ def info(request):
         return print_json_error(None,"Invalid user",'#5')
 
     return print_json(results)
+
+
+@csrf_exempt
+@token_required
+def room_list(request): 
+    results = list()
+    
+    try:
+        user = get_user_from_token(request)
+        if user is None:
+            return print_json_error(None,"No such User",'#0')
+
+        try:                    
+            rooms = RoomAttendants.objects.filter(user=user)
+            for room in rooms:
+                room_info = process_room_info(room.room)
+                if room_info is not None:
+                    results.append(room_info)
+
+            return print_json(results)
+
+        except Exception as e:
+            print str(e)
+            return print_json_error(None,"Something wrong", '#6')
+
+    except Exception as e:
+        print str(e)
+        return print_json_error(None,"Invalid user",'#51')
+    
+    return print_json(results)

@@ -52,6 +52,7 @@ def process_user_profile(user):
         result['username'] = user.username
         result['phone'] = user_profile.phone
         result['picture'] = user_profile.picture.url
+        result['update_date'] = str(user_profile.update_date)
         return result
     except Exception as e:
         return None
@@ -61,6 +62,7 @@ def process_room_info(room):
     result['id'] = room.id
     result['create_date'] = str(room.reg_date)
     result['creator'] = process_user_profile(room.creator)
+
     try:
         last_msg = Messages.objects.filter(room=room).order_by('-reg_date')[0]
         result['last_msg'] = process_message(last_msg)
