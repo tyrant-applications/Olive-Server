@@ -51,24 +51,36 @@ def create_room(request):
         user = get_user_from_token(request)
         if user is None:
             return print_json_error(None,"No such User",'#0')
-        new_room = Rooms.objects.create(creator=user)
-        results['room'] = process_room_info(new_room)
 
         friends_id = request.POST['friends_id']
         friends_id_list = friends_id.split(",")
         active_users = list()
+        active_users_id = list()
         for friend_id in friends_id_list:
             f_id = friend_id.strip()
-            f_user = get_user(f_id)
-            if not f_user.is_active:
+            try:
+                f_user = get_user(f_id)
+                if not f_user.is_active:
+                    continue
+                active_users.append(f_user)
+                active_users_id.append(f_id)
+            except Exception as e:
+                print str(e)
                 continue
-            active_users.append(f_user)
-
-        active_users.remove(user) # Case: my email is in friend_id, (Chat with myself? nono)
+    
+        if user in active_users:
+            active_users.remove(user)
+            active_users_id.remove(user.username) # Case: my email is in friend_id, (Chat with myself? nono)
         
         if len(active_users) <= 0:
             return print_json_error(None,"No Friends",'#2')
 
+        list_str = ",".join(active_users_id)
+
+        new_room,room_created = Rooms.objects.get_or_create(creator=user, attendants_list = list_str)
+        results['room'] = process_room_info(new_room)
+        results['room_created'] = room_created
+        
         active_users.append(user)
         for active_user in active_users:
             try:

@@ -23,7 +23,8 @@ class Friendship(models.Model):
 class Rooms(models.Model):
     reg_date = models.DateTimeField(auto_now_add=True, editable=False)
     creator = models.ForeignKey(User)
-
+    attendants_list = models.TextField()
+    
 class RoomAttendants(models.Model):
     room = models.ForeignKey(Rooms)
     user = models.ForeignKey(User)
