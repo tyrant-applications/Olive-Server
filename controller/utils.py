@@ -62,7 +62,7 @@ def process_room_info(room):
     result['id'] = room.id
     result['create_date'] = str(room.reg_date)
     result['creator'] = process_user_profile(room.creator)
-
+    result['room_attendants'] = room.attendants_list
     try:
         last_msg = Messages.objects.filter(room=room).order_by('-reg_date')[0]
         result['last_msg'] = process_message(last_msg)
