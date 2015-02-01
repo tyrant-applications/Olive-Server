@@ -191,7 +191,6 @@ def profile_friends(request):
     
     return print_json(results)
 
-
 @csrf_exempt
 @token_required
 def list_friends(request):
@@ -203,7 +202,6 @@ def list_friends(request):
         friendships = Friendship.objects.filter(user=user)
         results = list()
         for friendship in friendships:
-            print friendship
             friend_info = process_user_profile(friendship.friend)
             if friend_info is not None:
                 results.append(friend_info)

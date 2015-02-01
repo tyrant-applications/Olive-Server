@@ -29,6 +29,8 @@ from django.conf import settings
 from io import BufferedWriter,FileIO
 from django import forms
 
+from django.core.exceptions import ObjectDoesNotExist
+
 
 import re
 
@@ -75,13 +77,25 @@ def create_room(request):
         if len(active_users) <= 0:
             return print_json_error(None,"No Friends",'#2')
 
+        active_users.append(user)
+        active_users_id.append(user.username)
+        
+        active_users_id.sort()
+        
         list_str = ",".join(active_users_id)
 
-        new_room,room_created = Rooms.objects.get_or_create(creator=user, attendants_list = list_str)
+        room_created = False
+        try:
+            new_room = Rooms.objects.get(attendants_list = list_str)
+        except ObjectDoesNotExist:
+            room_created = True
+            new_room = Rooms.objects.create(creator=user, attendants_list = list_str)
+        
+        
+        
         results['room'] = process_room_info(new_room)
         results['room_created'] = room_created
         
-        active_users.append(user)
         for active_user in active_users:
             try:
                 attendant, created = RoomAttendants.objects.get_or_create(user=active_user, room=new_room)
