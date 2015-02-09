@@ -30,14 +30,29 @@ class RoomAttendants(models.Model):
     user = models.ForeignKey(User)
 
 
+class AttachedFile(models.Model):
+    file_type = models.CharField(max_length=10)
+    file_contents = models.FileField(upload_to='files',null=False)
+    upload_date = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
+    uploader = models.ForeignKey(User)
+    file_name = models.CharField(max_length=256)
+    is_attached = models.BooleanField(default=False)
+
+
 class Messages(models.Model):
     room = models.ForeignKey(Rooms)
     author = models.ForeignKey(User)
     reg_date = models.DateTimeField(auto_now_add=True, editable=False)
     msg_type = models.IntegerField(default=0)
     contents = models.TextField(null=False)
+    attached_file = models.ForeignKey(AttachedFile, blank=True, null=True)
+
 
 class RoomNotifications(models.Model):
     user = models.ForeignKey(User)
     message = models.ForeignKey(Messages)
     processed = models.BooleanField(default=False)
+
+
+

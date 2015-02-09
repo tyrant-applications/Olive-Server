@@ -80,8 +80,11 @@ def process_message(message):
         result['reg_date'] = str(message.reg_date)
         result['msg_type'] = str(message.msg_type)
         result['contents'] = message.contents
+        if message.attached_file is not None:
+            result['contents'] = message.attached_file.file_contents.url
         return result
     except Exception as e:
+        print str(e)
         return None
     
 
