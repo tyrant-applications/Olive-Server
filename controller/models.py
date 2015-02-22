@@ -11,7 +11,8 @@ class UserProfile(models.Model):
     update_date = models.DateTimeField(auto_now=True)
     activation_key = models.CharField(max_length=40)
     key_expires = models.DateTimeField()
-
+    device_type = models.IntegerField(default=0)
+    device_id = models.CharField(max_length=256, null=True)
 
 
 class Friendship(models.Model):
@@ -55,4 +56,9 @@ class RoomNotifications(models.Model):
     processed = models.BooleanField(default=False)
 
 
-
+class PushNotifications(models.Model):
+    user = models.ForeignKey(User)
+    push_type = models.IntegerField(default=0)
+    device_type = models.IntegerField(default=0)
+    device_id = models.CharField(max_length=256)
+    contents = models.TextField()

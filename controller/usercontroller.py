@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 
-
-
 from django.contrib.auth.models import User
 
 from django.http import HttpResponse
@@ -15,6 +13,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader
 from django.core.mail import send_mail
 
+from controller.TyrantAccessTokenView import *
 from controller.models import *
 from controller.utils import *
 from controller.forms import *

@@ -6,12 +6,24 @@ from django.conf.urls.static import static
 from django.contrib import admin
 admin.autodiscover()
 
+from controller.TyrantAccessTokenView import *
+from django.views.decorators.csrf import csrf_exempt
+
 urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'tyrant_server.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
+
+    url(r'^device/check$','controller.devicecontroller.check'),
+
     url(r'^oauth2/', include('provider.oauth2.urls', namespace = 'oauth2')),
+    url(r'^oauth3/access_token', 'controller.usercontroller.access_token'),
+
+    url('^access_token/?$',
+        csrf_exempt(TAccessTokenView.as_view()),
+        name='access_token'),
+
 
     url(r'^confirm/$','controller.usercontroller.confirm'),
 
