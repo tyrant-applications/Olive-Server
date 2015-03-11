@@ -77,6 +77,12 @@ def signup(request):
     if not request.POST:
         return print_json_error(None,'POST method is required.','#2')
 
+    if not request.POST.get('username'):
+        return print_json_error(None,"Username required",'#0.1')
+
+    if not request.POST.get('password'):
+        return print_json_error(None,"Password required",'#0.2')
+    
     username=request.POST.get('username','')
     username=smart_unicode(username, encoding='utf-8', strings_only=False, errors='strict')
     password=request.POST.get('password','')
@@ -92,10 +98,11 @@ def signup(request):
         impossible_username = ['apple','facebook','twitter']    
         if username in impossible_username:
             return print_json_error(username+' is already taken','#7')
+        
         try:
             user = get_user(username)
-            return print_json_error(username+' is already taken','#4')
-        except:
+            return print_json_error(None, username+' is already taken','#4')
+        except Exception as e:
             new_user = create_user(username, password)
             #new_user = User.objects.create_user(username,password)
             new_user.is_active = True
