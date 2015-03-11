@@ -57,8 +57,10 @@ class RoomNotifications(models.Model):
 
 
 class PushNotifications(models.Model):
-    user = models.ForeignKey(User)
+    from_user = models.ForeignKey(User)
+    to_user = models.ForeignKey(User)
     push_type = models.IntegerField(default=0)
     device_type = models.IntegerField(default=0)
     device_id = models.CharField(max_length=256)
     contents = models.TextField()
+    processed = models.BooleanField(default=False)
