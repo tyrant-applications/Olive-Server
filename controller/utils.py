@@ -35,7 +35,8 @@ def add_notification(from_user,to_user, data):
         user_profile = UserProfile.objects.get(user=to_user)
         if not user_profile.device_id:
             return False
-        noti = PushNotifications.objects.create(from_user=from_user,to_user=to_user,device_id=user_profile.device_id, device_type = user_profile.device_type, contents=data)        
+        contents = json.dumps(data)
+        noti = PushNotifications.objects.create(from_user=from_user,to_user=to_user,device_id=user_profile.device_id, device_type = user_profile.device_type, contents=contents)        
         return True
     except Exception as e:
         print str(e)
