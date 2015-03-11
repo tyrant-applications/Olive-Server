@@ -27,6 +27,22 @@ from django.utils import timezone
 
 import dateutil.parser
 
+
+def add_notification(user, data):
+    if not user.is_active:
+        return False
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+        if not user_profile.device_id:
+            return False
+
+        noti = PushNotifications.objects.create(user=user,device_id=user_profile.device_id, device_type = user_profile.device_type, contents=data)        
+        return True
+    except Exception as e:
+        print str(e)
+        return False
+
+
 def print_json(data):
     result=dict()
     result['success']=True
