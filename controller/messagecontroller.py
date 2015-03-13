@@ -113,7 +113,7 @@ def post_file(request, room_id, msg_type):
             for attendant in attendants:
                 if user.username.lower() != attendant.user.username.lower():
                     noti = RoomNotifications.objects.create(user=attendant.user, message=message)
-                    add_notification(attendant.user, "Attached File")
+                    add_notification(user, attendant.user, process_message(message))
                     noti.save()
             
             result = process_message(message)
