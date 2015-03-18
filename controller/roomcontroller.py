@@ -102,6 +102,8 @@ def create_room(request):
                 friend_info = process_user_profile(active_user)
                 if friend_info is not None:
                     results['room_attentdants'].append(friend_info)
+                    if room_created:
+                        add_notification(user, active_user, process_room_info(new_room), 2)
             except Exception as e:
                 print str(e)
                 return print_json_error(None,"No such User "+f_id,'#4')
@@ -109,7 +111,7 @@ def create_room(request):
         print str(e)
         return print_json_error(None,"Invalid user",'#5')
     return print_json(results)
-       
+     
 
 @csrf_exempt
 @post_required
@@ -136,6 +138,17 @@ def leave_room(request):
             attendant = RoomAttendants.objects.get(user=user, room=room)
             attendant.delete()
             
+            push_info = dict()
+            push_info['user'] = process_user_profile(user)
+            push_info['room_id'] = room.id
+         
+            attendants = RoomAttendants.objects.filter(room=room)
+            for attendant in attendants:
+                add_notification(user, attendant, push_info, 3)
+                friend_info = process_user_profile(attendant.user)
+                if friend_info is not None:
+                    results['room_attentdants'].append(friend_info)
+
         except:
             return print_json_error(None,"You are not participant of this room", '#3')
 

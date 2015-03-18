@@ -208,6 +208,11 @@ def update(request):
             user.save()            
             user_profile.save()
             
+            friendships = Friendship.objects.filter(user=user)
+            for friendship in friendships:
+                if friendship.friend.is_active:
+                    add_notification(user, friendship.friend, process_user_profile(user), 5)
+
             if form.is_valid():
                 make_thumbnail(user, user_profile)
             #upload new profile picture

@@ -28,13 +28,21 @@ from django.utils import timezone
 import dateutil.parser
 
 
-def add_notification(from_user,to_user, data):
+'''
+push_type
+1: new message
+2: room create
+3: leave room
+4: 
+'''
+def add_notification(from_user,to_user, data, push_type):
     if not to_user.is_active:
         return False
     try:
         user_profile = UserProfile.objects.get(user=to_user)
         if not user_profile.device_id:
             return False
+        data['push_type'] = push_type
         contents = json.dumps(data)
         noti = PushNotifications.objects.create(from_user=from_user,to_user=to_user,device_id=user_profile.device_id, device_type = user_profile.device_type, contents=contents)        
         return True

@@ -87,7 +87,7 @@ def post_file(request, room_id, msg_type):
             attendants = RoomAttendants.objects.filter(room=room)
             message = Messages.objects.create(room=room, author=user, msg_type=msg_type,contents=msg_type)
             
-            success, attached_file = upload_files(request)
+            success, attached_file = upload_files(request, msg_type)
             if success == False:
                 message.delete()
                 print attached_file
@@ -113,7 +113,7 @@ def post_file(request, room_id, msg_type):
             for attendant in attendants:
                 if user.username.lower() != attendant.user.username.lower():
                     noti = RoomNotifications.objects.create(user=attendant.user, message=message)
-                    add_notification(user, attendant.user, process_message(message))
+                    add_notification(user, attendant.user, process_message(message), 1)
                     noti.save()
             
             result = process_message(message)
@@ -150,7 +150,7 @@ def post_text(request, room_id, msg_type):
         
         if not check_user_in_room(user, room):
             return print_json_error(None,"You are not participant of this room", '#3')
-
+        
         try:            
             attendants = RoomAttendants.objects.filter(room=room)
             message = Messages.objects.create(room=room, author=user, msg_type=msg_type,contents=contents)
@@ -169,7 +169,7 @@ def post_text(request, room_id, msg_type):
             for attendant in attendants:
                 if user.username.lower() != attendant.user.username.lower():
                     noti = RoomNotifications.objects.create(user=attendant.user, message=message)
-                    add_notification(user, attendant.user, process_message(message))
+                    add_notification(user, attendant.user, process_message(message), 1)
                     noti.save()
             
             result = process_message(message)
@@ -279,7 +279,7 @@ def new(request):
 
 
 import uuid
-def save_upload(request, uploaded, filename, raw_data ):
+def save_upload(request, uploaded, filename, raw_data, msg_type):
     """
     raw_data: if True, upfile is a HttpRequest object with raw post data
     as the file, rather than a Django UploadedFile from request.FILES
@@ -293,7 +293,7 @@ def save_upload(request, uploaded, filename, raw_data ):
         real_file_name = str(user.id) + "_" + str(uuid.uuid1()) + fileExtension
         filename = os.path.normpath(os.path.join(settings.MEDIA_ROOT+'/files/', real_file_name))
         
-        with BufferedWriter( FileIO( filename, "w" ) ) as dest:
+        with BufferedWriter( FileIO( filename + '.temp', "w" ) ) as dest:
             # if the "advanced" upload, read directly from the HTTP request
             # with the Django 1.3 functionality
             if raw_data:
@@ -304,6 +304,8 @@ def save_upload(request, uploaded, filename, raw_data ):
                 
                 new_file = AttachedFile(file_type=fileExtension,file_name=input_file_name, uploader=user)
                 new_file.file_contents.save(fileName,ContentFile(uploaded.read()))
+                if msg_type == '1':
+                    make_thumbnail(new_file)
             # if not raw, it was a form upload so read in the normal Django chunks fashion
             else:
                 (dirName, fileName) = os.path.split(filename)
@@ -322,9 +324,12 @@ def save_upload(request, uploaded, filename, raw_data ):
 #                 new_file.save()
                 new_file = AttachedFile(file_type=fileExtension,file_name=fileName, uploader=user)
                 #fileName2 = user.username + "_" + str(uuid.uuid1()) +'.'+ fileExtension
-                new_file.file_contents.save(fileName,File(open(filename)))
+                new_file.file_contents.save(fileName,File(open(filename + '.temp')))
                 new_file.save()
-
+                os.remove(filename + '.temp')
+                if msg_type == '1':
+                    make_thumbnail(new_file)
+    
     except Exception as e:
         print str(e)
         # could not open the file most likely
@@ -332,8 +337,11 @@ def save_upload(request, uploaded, filename, raw_data ):
     return True, new_file
 
 
+'''
+ msg_type == 1 : Image Upload -> Make Thumbnail
+'''
 @csrf_exempt
-def upload_files(request):
+def upload_files(request, msg_type):
     is_raw = False
     if len( request.FILES ) == 1:
         upload = request.FILES.values()[ 0 ]
@@ -343,4 +351,30 @@ def upload_files(request):
     filename=smart_unicode(filename, encoding='utf-8', strings_only=False, errors='strict')
     # save the file
     
-    return save_upload(request, upload, filename, is_raw)
+    return save_upload(request, upload, filename, is_raw, msg_type)
+
+
+from PIL import Image, ImageOps
+
+size_s = 64, 64
+size_m = 128, 128
+size_l = 256, 256
+
+def make_thumbnail(new_file):
+    try:
+        if True:
+            file_path = new_file.file_contents.url
+            filename = os.path.join(settings.MEDIA_ROOT, 'files',new_file.file_name)
+            image_s = Image.open(filename)
+            image_s.thumbnail(size_s, Image.ANTIALIAS)
+            image_s.save(filename+"_s.png", 'PNG', quality=100)
+            image_m = Image.open(filename)
+            image_m.thumbnail(size_m, Image.ANTIALIAS)
+            image_m.save(filename+"_m.png", 'PNG', quality=100)
+            image_l = Image.open(filename)
+            image_l.thumbnail(size_l, Image.ANTIALIAS)
+            image_l.save(filename+"_l.png", 'PNG', quality=100)
+    except IOError as e:
+    	print e
+    	return False
+    return True
