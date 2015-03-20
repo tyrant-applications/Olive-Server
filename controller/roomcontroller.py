@@ -141,7 +141,11 @@ def leave_room(request):
             push_info = dict()
             push_info['user'] = process_user_profile(user)
             push_info['room_id'] = room[0].id
-         
+            
+            room[0].attendants_list = room[0].attendants_list.replace(user.username+",", "") 
+            room[0].attendants_list = room[0].attendants_list.replace(user.username, "")
+            room[0].save()
+            
             attendants = RoomAttendants.objects.filter(room=room[0])
             result['room_attentdants'] = list()
             for attendant in attendants:
