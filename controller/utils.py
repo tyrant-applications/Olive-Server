@@ -44,7 +44,7 @@ def add_notification(from_user,to_user, data, push_type):
             return False
         data['push_type'] = push_type
         contents = json.dumps(data)
-        noti = PushNotifications.objects.create(from_user=from_user,to_user=to_user,device_id=user_profile.device_id, device_type = user_profile.device_type, contents=contents)        
+        noti = PushNotifications.objects.create(from_user=from_user,to_user=to_user,device_id=user_profile.device_id, device_type = user_profile.device_type, contents=contents, push_type=push_type)        
         return True
     except Exception as e:
         print str(e)
