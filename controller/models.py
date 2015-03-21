@@ -4,13 +4,13 @@ from django.conf import settings
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    nickname = models.CharField(max_length=50)
-    phone = models.CharField(max_length=50)
+    nickname = models.CharField(max_length=50, null=True)
+    phone = models.CharField(max_length=50, null=True)
     picture = models.ImageField(upload_to="profile", default='default.png')
     reg_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
-    activation_key = models.CharField(max_length=40)
-    key_expires = models.DateTimeField()
+    activation_key = models.CharField(max_length=40, null=True)
+    key_expires = models.DateTimeField(null=True)
     device_type = models.IntegerField(default=0)
     device_id = models.CharField(max_length=256, null=True)
 
@@ -24,7 +24,7 @@ class Friendship(models.Model):
 class Rooms(models.Model):
     reg_date = models.DateTimeField(auto_now_add=True, editable=False)
     creator = models.ForeignKey(User)
-    attendants_list = models.TextField()
+    attendants_list = models.TextField(null=True)
     
 class RoomAttendants(models.Model):
     room = models.ForeignKey(Rooms)
