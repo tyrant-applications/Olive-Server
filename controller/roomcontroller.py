@@ -102,8 +102,8 @@ def create_room(request):
                 friend_info = process_user_profile(active_user)
                 if friend_info is not None:
                     results['room_attentdants'].append(friend_info)
-                    if room_created and (active_user is not user):
-                        add_notification(user, active_user, process_room_info(new_room), 2)
+                    #if room_created and (active_user is not user):
+                    add_notification(user, active_user, process_room_info(new_room), 2)
             except Exception as e:
                 print str(e)
                 return print_json_error(None,"No such User "+f_id,'#4')

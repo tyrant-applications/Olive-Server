@@ -163,8 +163,7 @@ def signout(request):
         return print_json('')
         
         
-
-@csrf_exempt        
+@csrf_exempt
 @post_required
 @token_required
 def update(request):   
@@ -200,9 +199,10 @@ def update(request):
                 if new_phone is not None and new_phone != '':
                     new_phone = new_phone.strip()
                     user_profile.phone = new_phone
-                        
+              
             form = ImageUploadForm(request.POST, request.FILES)
             if form.is_valid():
+                print 12123
                 user_profile.picture = form.cleaned_data['new_picture']
             
             user.save()            
@@ -214,9 +214,10 @@ def update(request):
                     add_notification(user, friendship.friend, process_user_profile(user), 5)
 
             if form.is_valid():
+                print 123
                 make_thumbnail(user, user_profile)
             #upload new profile picture
-            return print_json(user.username)
+            return print_json(process_user_profile(user))
                 
     except Exception as e:
         print str(e)
