@@ -55,6 +55,7 @@ def add_friends(request):
         for friend_id in friends:
             f_id = friend_id.strip()
             try:
+                print f_id
                 f_user = get_user(f_id)
                 if not f_user.is_active:
                     continue
@@ -66,7 +67,6 @@ def add_friends(request):
                     results.append(friend_info)
             except Exception as e:
                 print str(e)
-                return print_json_error(None,"No such User "+f_id,'#4')
     except:
         return print_json_error(None,"Invalid user",'#5')
     
