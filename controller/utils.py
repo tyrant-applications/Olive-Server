@@ -28,6 +28,15 @@ from django.utils import timezone
 import dateutil.parser
 
 
+
+def get_unread_count(user):
+    try:          
+        notifications = RoomNotifications.objects.filter(user=user, processed=False)
+        return len(notifications)
+    except Exception as e:
+        return 0
+
+
 '''
 push_type
 1: new message
@@ -42,6 +51,8 @@ def add_notification(from_user,to_user, data, push_type):
         user_profile = UserProfile.objects.get(user=to_user)
         if not user_profile.device_id:
             return False
+        if user_profile.device_id == 2: #ios
+            data['unread_cnt'] = get_unread_count(to_user)
         data['push_type'] = push_type
         contents = json.dumps(data)
         noti = PushNotifications.objects.create(from_user=from_user,to_user=to_user,device_id=user_profile.device_id, device_type = user_profile.device_type, contents=contents, push_type=push_type)        

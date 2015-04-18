@@ -1327,3 +1327,10 @@ Traceback (most recent call last):
     filename = os.path.join(settings.MEDIA_ROOT, 'files',new_file.file_name)
                                                                            ^
 IndentationError: unindent does not match any outer indentation level
+Not Found: /media/files/5_192c499c-e0ea-11e4-b8d7-0025bce0bea8.jpg.thumb.png
+Not Found: /media/files/5_192c499c-e0ea-11e4-b8d7-0025bce0bea8.jpg.thumb.png
+Not Found: /media/files/5_192c499c-e0ea-11e4-b8d7-0025bce0bea8.jpg.thumb.png
+Not Found: /favicon.ico
+Not Found: /media/files/5_192c499c-e0ea-11e4-b8d7-0025bce0bea8.jpg.l.png
+Not Found: /media/files/5_192c499c-e0ea-11e4-b8d7-0025bce0bea8.jpg.l.png
+Not Found: /media/files/5_192c499c-e0ea-11e4-b8d7-0025bce0bea8.jpg.l.png
