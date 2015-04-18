@@ -51,7 +51,7 @@ def add_notification(from_user,to_user, data, push_type):
         user_profile = UserProfile.objects.get(user=to_user)
         if not user_profile.device_id:
             return False
-        if user_profile.device_id == 2: #ios
+        if user_profile.device_type == 2: #ios
             data['unread_cnt'] = get_unread_count(to_user)
         data['push_type'] = push_type
         contents = json.dumps(data)
